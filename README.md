@@ -12,7 +12,7 @@ By default, Casting Level bonuses in the IE games do not stack -- the last-appli
 This also works with on-the-fly changes like Wild Mage casting level changes or temporary buffs like the Kappelmeister Bardsong from TheArtisanBG's Bardic Wonders mod.
 
 ## Compatibility and Installation Order
-Install this **very late**. And I mean it's probably great if this was the absolute last mod in your load order. It can safely go after EET_End, it MUST go after Tactics Remix (which adds +1 CL to all enemy mages), Skills & Abilities (which adds a proficiency that grants +1 CL), A7-Multikits (which can generate new kits with CL changes), and NPC EE (which can respec a character). It patches every instance of the vanilla Casting Level Bonus effect (opcode 191) across all items, spells, and creature files with a new EEEx based effect (opcode 402, custom Lua fn), that accumulates the CL bonuses.
+Install this **very late**. And I mean it's probably great if this was the absolute last mod in your install order. It can safely go after EET_End, it MUST go after Tactics Remix (which adds +1 CL to all enemy mages), Skills & Abilities (which adds a proficiency that grants +1 CL), A7-Multikits (which can generate new kits with CL changes), and NPC EE (which can respec a character). It patches every instance of the vanilla Casting Level Bonus effect (opcode 191) across all items, spells, and creature files with a new EEEx based effect (opcode 402, custom Lua fn), that accumulates the CL bonuses.
 
 So to guarantee that no other op191 effects remain that can muck up your stats, install this very late. **Needs a new game for it to work**
 
