@@ -1,0 +1,21 @@
+BACKUP ~weidu_external/backup/XGTCumulativeCasterLevels~
+AUTHOR ~Xgatt~
+VERSION ~0.6a~
+
+AUTO_TRA ~%MOD_FOLDER%/languages/%s~
+
+LANGUAGE ~English~
+         ~english~
+         ~%MOD_FOLDER%/languages/english/setup.tra~
+
+BEGIN @2
+DESIGNATED 100
+LABEL ~XGTCumulativeCasterLevels~
+REQUIRE_PREDICATE GAME_IS ~bgee bg2ee eet~ @3
+REQUIRE_PREDICATE (MOD_IS_INSTALLED ~EEex/EEex.tp2~ ~0~) @4
+
+COPY ~%MOD_FOLDER%/lua/M_XGTCCL.lua~ ~override/M_XGTCCL.lua~
+
+INCLUDE ~%MOD_FOLDER%/lib/patch_op191.tpa~
+
+PRINT @5

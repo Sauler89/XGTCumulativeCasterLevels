@@ -1,0 +1,137 @@
+// patch_op191.tpa — Replace all opcode 191 effects with opcode 402 (Invoke Lua)
+//
+// Patches both ITM and SPL files. Preserves param1 (effectAmount) and
+// param2 (dwFlags: 0=mage, 1=cleric). Sets resource to XGTCLMOD.
+
+OUTER_SET xgt_patched_itm = 0
+OUTER_SET xgt_patched_spl = 0
+
+// === Patch ITM files ===
+COPY_EXISTING_REGEXP GLOB ~.*\.ITM~ ~override~
+  SET patched = 0
+  PATCH_IF (SOURCE_SIZE >= 0x72) BEGIN
+    // Global equipped effects
+    READ_LONG  0x6a fx_offset
+    READ_SHORT 0x6e equip_fx_index
+    READ_SHORT 0x70 equip_fx_count
+    FOR (i = 0; i < equip_fx_count; ++i) BEGIN
+      SET fx_off = fx_offset + (equip_fx_index + i) * 0x30
+      PATCH_IF (fx_off + 0x30 <= SOURCE_SIZE) BEGIN
+        READ_SHORT (fx_off + 0x00) opcode
+        PATCH_IF (opcode = 191) BEGIN
+          WRITE_SHORT (fx_off + 0x00) 402
+          WRITE_ASCII (fx_off + 0x14) ~XGTCLMOD~ (8)
+          SET patched = 1
+        END
+      END
+    END
+    // Ability header effects
+    READ_LONG  0x64 abil_offset
+    READ_SHORT 0x68 abil_count
+    READ_LONG  0x6a fx_offset
+    FOR (a = 0; a < abil_count; ++a) BEGIN
+      READ_SHORT (abil_offset + a * 0x38 + 0x1E) abil_fx_count
+      READ_SHORT (abil_offset + a * 0x38 + 0x20) abil_fx_index
+      FOR (i = 0; i < abil_fx_count; ++i) BEGIN
+        SET fx_off = fx_offset + (abil_fx_index + i) * 0x30
+        PATCH_IF (fx_off + 0x30 <= SOURCE_SIZE) BEGIN
+          READ_SHORT (fx_off + 0x00) opcode
+          PATCH_IF (opcode = 191) BEGIN
+            WRITE_SHORT (fx_off + 0x00) 402
+            WRITE_ASCII (fx_off + 0x14) ~XGTCLMOD~ (8)
+            SET patched = 1
+          END
+        END
+      END
+    END
+  END
+  PATCH_IF patched BEGIN
+    SET xgt_patched_itm += 1
+  END
+  BUT_ONLY
+
+// === Patch SPL files ===
+COPY_EXISTING_REGEXP GLOB ~.*\.SPL~ ~override~
+  SET patched = 0
+  PATCH_IF (SOURCE_SIZE >= 0x72) BEGIN
+    READ_LONG  0x64 abil_offset
+    READ_SHORT 0x68 abil_count
+    READ_LONG  0x6a fx_offset
+    FOR (a = 0; a < abil_count; ++a) BEGIN
+      READ_SHORT (abil_offset + a * 0x28 + 0x1E) abil_fx_count
+      READ_SHORT (abil_offset + a * 0x28 + 0x20) abil_fx_index
+      FOR (i = 0; i < abil_fx_count; ++i) BEGIN
+        SET fx_off = fx_offset + (abil_fx_index + i) * 0x30
+        PATCH_IF (fx_off + 0x30 <= SOURCE_SIZE) BEGIN
+          READ_SHORT (fx_off + 0x00) opcode
+          PATCH_IF (opcode = 191) BEGIN
+            WRITE_SHORT (fx_off + 0x00) 402
+            WRITE_ASCII (fx_off + 0x14) ~XGTCLMOD~ (8)
+            SET patched = 1
+          END
+        END
+      END
+    END
+  END
+  PATCH_IF patched BEGIN
+    SET xgt_patched_spl += 1
+  END
+  BUT_ONLY
+
+// === Patch EFF files ===
+COPY_EXISTING_REGEXP GLOB ~.*\.EFF~ ~override~
+  PATCH_IF (SOURCE_SIZE >= 0x110) BEGIN
+    READ_LONG 0x10 opcode
+    PATCH_IF (opcode = 191) BEGIN
+      WRITE_LONG 0x10 402
+      WRITE_ASCII 0x30 ~XGTCLMOD~ (8)
+    END
+  END
+  BUT_ONLY
+
+// === Patch CRE files (embedded effects at 0x2C4/0x2C8) ===
+// Effect format depends on byte 0x33: 0=V1 (0x30 bytes), 1=V2 (0x108 bytes)
+// V1: opcode at 0x00, resource at 0x14 (same as ITM/SPL effects)
+// V2: opcode at 0x08, resource at 0x28 (EFF V2 minus 8-byte header)
+OUTER_SET xgt_patched_cre = 0
+
+COPY_EXISTING_REGEXP GLOB ~.*\.CRE~ ~override~
+  PATCH_IF (SOURCE_SIZE >= 0x2CC) BEGIN
+    SET patched = 0
+    READ_BYTE  0x33 eff_version
+    READ_LONG  0x2C4 fx_offset
+    READ_LONG  0x2C8 fx_count
+    PATCH_IF eff_version = 0 BEGIN
+      // V1 effects: 0x30 bytes each
+      FOR (i = 0; i < fx_count; ++i) BEGIN
+        SET fx_off = fx_offset + i * 0x30
+        PATCH_IF (fx_off + 0x30 <= SOURCE_SIZE) BEGIN
+          READ_SHORT (fx_off + 0x00) opcode
+          PATCH_IF (opcode = 191) BEGIN
+            WRITE_SHORT (fx_off + 0x00) 402
+            WRITE_ASCII (fx_off + 0x14) ~XGTCLMOD~ (8)
+            SET patched = 1
+          END
+        END
+      END
+    END ELSE BEGIN
+      // V2 effects: 0x108 bytes each
+      FOR (i = 0; i < fx_count; ++i) BEGIN
+        SET fx_off = fx_offset + i * 0x108
+        PATCH_IF (fx_off + 0x108 <= SOURCE_SIZE) BEGIN
+          READ_LONG (fx_off + 0x08) opcode
+          PATCH_IF (opcode = 191) BEGIN
+            WRITE_LONG (fx_off + 0x08) 402
+            WRITE_ASCII (fx_off + 0x28) ~XGTCLMOD~ (8)
+            SET patched = 1
+          END
+        END
+      END
+    END
+    PATCH_IF patched BEGIN
+      SET xgt_patched_cre += 1
+    END
+  END
+  BUT_ONLY
+
+PRINT ~XGT-CCL: Patched %xgt_patched_itm% items, %xgt_patched_spl% spells, and %xgt_patched_cre% creatures (op191 -> op402).~
