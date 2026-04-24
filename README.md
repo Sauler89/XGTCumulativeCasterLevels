@@ -5,9 +5,9 @@ This is a WeiDU mod for the Infinity Engine Enhanced Edition games (BGEE, BG2EE,
 
 By default, Casting Level bonuses in the IE games do not stack -- the last-applied effect always wins. This mod fixes that. So if you had a class kit that had a -2 malus to Arcane Casting Level, wore a robe that gave +3 to Arcane Casting Level, and picked up a proficiency that gave +1 to Arcane Casting Level:
 
-* Your expectation: -2 + 3 + 1 = +2
-* Realily in Vanilla IE games: +1 if you picked up the proficiency last, +3 if you equipped the robe last, and -2 if you added the class kit last.
-* With this mod: -2 + 3 + 1 = +2 (everything from all sources accumulates).
+* **Your expectation:** -2 + 3 + 1 = +2
+* **Realily in Vanilla IE games:** +1 if you picked up the proficiency last, +3 if you equipped the robe last, and -2 if you added the class kit last.
+* **With this mod:** -2 + 3 + 1 = +2 (everything from all sources accumulates).
 
 This also works with on-the-fly changes like Wild Mage casting level changes or temporary buffs like the Kappelmeister Bardsong from TheArtisanBG's Bardic Wonders mod.
 
@@ -21,7 +21,7 @@ Vanilla Casting level bonus uses Opcode 191, which is hard coded at the engine l
 
 EEEx exposes a new Opcode, op402, which allows the invocation of a custom Lua function. All this mod does is to add that simple Lua function that looks at the configured bonus value (e.g. +2, -1, +3, etc) and ADD it to the existing CASTINGLEVELBONUSMAGE or CASTINGLEVELBONUSCLERIC stat instead of overriding it. 
 
-At install time, it swaps out every instance of op191 with op402 invoking the aforementioned function. There will be zero impact to performance from this operation.
+At install time, it swaps out every instance of op191 with op402 invoking the aforementioned function. There should be zero impact to performance from this operation.
 
 ## Credits
 Bubb, for basically handing me the solution after I'd been struggling for a while.
